@@ -1,0 +1,27 @@
+/*********************
+	默认边框
+	支持传参数，@borderwidth，@bordercolor
+*********************/
+.borderfunction(@borderwidth:1px,@bordercolor:#ccc){
+	border:solid @borderwidth @bordercolor;
+}
+/***********圆角边框************/
+.border-radius (@radius: 3px) {    
+    -moz-border-radius: @radius;
+    -webkit-border-radius: @radius;
+	border-radius: @radius;
+}
+/*box-shadow*/
+.boxShadow(@boxShadow) {
+	-moz-box-shadow: @boxShadow;
+	-webkit-box-shadow: @boxShadow;
+	box-shadow: @boxShadow;
+}
+
+/*不换行*/
+.cutstr{
+	white-space:nowrap;
+	overflow:hidden;
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+}

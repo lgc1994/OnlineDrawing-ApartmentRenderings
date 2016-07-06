@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>图片加载平移放大缩小示例</title>
+		<link rel="stylesheet" type="text/css" href="style/yangshi.css"/>
+		<link rel="stylesheet" href="style/css/jquery.cxcolor.css">
+		<script src="js/jquery-1.11.0.js"></script>
+		<script src="js/jquery.cxcolor.js"></script>
+	</head>
+	<body>
+		<script>
+		var j;
+			function allowDrop(ev)
+			{
+				ev.preventDefault();
+			}
+			
+			function drag(ev)
+			{
+				
+				j = ev.target.getElementsByTagName("img");
+				ev.dataTransfer.setData("Text","");
+			}
+			
+			function drop(ev)
+			{
+				var bottom = 0;
+				var data = j[0].src;
+				var bool = data.indexOf("jiagou");
+				data = "style/"+data.split("style/")[1];
+				if(bool>0){
+					addimg(bottom,data,j[0].width,j[0].height,ev);
+				}else{
+					addimg(bottom,data,j[0].width,j[0].height,ev);
+				}
+			}
+			
+        	function shili(v){
+        		var con=confirm('确定已保存当前内容?');
+        		if(con){
+	        		var txt = $(v).attr("txt");
+	        		changeCanvase(txt);
+        		}
+        	}
+        	function  getFilesName(files)
+			  {
+			    if(files.length)
+			    {
+			       var file = files[0];
+			       var reader = new FileReader();
+			       reader.onload = function()
+			       {
+						document.getElementById("filename").innerHTML = file.name;
+			       };
+			       reader.readAsText(file);
+			    }
+			    handleFiles();
+			    document.getElementById("file").value = '';
+			  }
+		  function  handleFiles()
+		  {
+		  	var files = document.getElementById("file").files;
+		    if(files.length)
+		    {
+		       var file = files[0];
+		       var reader = new FileReader();
+		       reader.onload = function()
+		       {
+    				changeCanvase(this.result);
+		       };
+		       reader.readAsText(file);
+		    }
+		  }
+		</script>
+		<div class="body-wrap clearfix">
+		<div class="title"><h2>在线绘制户型图</h2></div>
+		
+		<div class="right clearfix">
+			<div class="menu-div">
+				<i onclick="clockwise(45);" title="顺时针旋转45°"  class="shun-icon">正转45°</i><br />
+				<i onclick="clockwise(-45);" title="逆时针旋转45°" class="ni-icon">逆转45°</i>
+			</div>
+			<div class="menu-div">
+				<i id="kuanjia-icon" class="kuanjia-icon" title="画出基本框架">框架</i>
+				<i id="qiang-icon" class="qiang-icon" title="画墙壁">画墙</i><br />
+				<span class="font-color" id="color-div" title="修改墙体颜色"><input type="text" id="Qcolor"  class="input_cxcolor"/></span>
+				<span id="dian"><i class="dian1" title="4px">4</i><i class="dian2" title="8px">8</i><i class="dian3" title="16px">16</i></span>
+			</div>
+			<div class="menu-div">
+				<i id="font" title="插入文字" class="font-icon">写字</i>
+				<span class="font-color" id="color-div" title="修改字体颜色"><input type="text" id="color"  class="input_cxcolor"/></span>
+			</div>
+			<div class="menu-div">
+				<i onclick="up();" title="图片往上一层" class="up-icon" >往上一层</i>
+				<i onclick="upMax();" title="图片置顶" class="upall-icon">置顶</i>
+				<br />
+				<i onclick="down();" title="图片往下一层" class="down-icon">往下一层</i>
+				<i onclick="downMax();" title="图片置底" class="downall-icon">置底</i>
+			</div>
+			<div class="menu-div">
+				<i onclick="copyimage(event,1);" class="photo-icon" title="导出图片">导出图片</i>
+				<i onclick="strJsonToJsonByEval();" class="save-icon" title="保存成文本">保存</i>
+				<br />
+				<i class="open-icon file input">
+					<span id="filename">打开</span>
+					<input type="file" id="file" title="打开文件" onchange="getFilesName(this.files)"/>
+				</i>
+			</div>
+			<div class="menu-div">
+				<i onclick="var con=confirm('确定删除这图层?');if(con){remove1();}" title="删除图层" class="delete">删除</i>
+				<i onclick="var con=confirm('确定清空画布?');if(con){cleanCanvas();}" title="全部清空" class="trash-icon">清空</i><br />
+				<i id="qi-icon" class="font-color" title="对齐方式">对齐</i>
+				<span class="ge-icon" id="ge-icon" title="网格下点击图层能自动贴紧网格">网格</span>
+			</div>
+			<div class="menu-div">
+				<span class="ge-icon" id="magnet" title="智能贴近墙壁">智能贴墙</span>
+			</div>
+				<i class="help-icon" id="help-icon" title="帮助">帮助</i>
+		</div>
+		
+		<span id="duiqi" class="clearfix">
+			<i class="qi-left-icon" onclick="left(1);">左对齐</i>
+			<i class="qi-right-icon" onclick="left(2);">右对齐</i>
+			<i class="qi-up-icon" onclick="left(3);">上对齐</i>
+			<i class="qi-down-icon" onclick="left(4);">下对齐</i>
+			<i class="qi-center-icon2" onclick="left(5);">水平居中</i>
+			<i class="qi-center-icon1" onclick="left(6);">垂直居中</i>
+		</span>
+		<div  class="main">
+			<div class="clearfix canvasmain" id="main">
+				<div class="clearfix left">
+				<div class="tab clearfix">
+				<span class="on" style="float: left;">架构</span>
+				<span style="float: left;">示例</span>
+				</div>
+				<div id="jiagou" class="jia">
+					<div class="bankuai">
+						<h2>建筑物核心</h2>
+						<div style="display: block;" class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/zhinanzhen.png" width="121" height="145" draggable="false"/></div>
+								<div class="text-div"><span>指南针</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/jiantou.png" width="60" height="117" draggable="false"/></div>
+								<div class="text-div"><span>箭头</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng.png" width="93" height="101" draggable="false"/></div>
+								<div class="text-div"><span>门1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng2.png" width="173" height="102" draggable="false"/></div>
+								<div class="text-div"><span>门2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng3.png" width="139" height="107" draggable="false"/></div>
+								<div class="text-div"><span>门3</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng4.png" width="96" height="104" draggable="false"/></div>
+								<div class="text-div"><span>门1(倒)</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng5.png" width="173" height="103" draggable="false"/></div>
+								<div class="text-div"><span>门1(倒)</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/meng6.png" width="140" height="106" draggable="false"/></div>
+								<div class="text-div"><span>门1(倒)</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/louti1.png" width="119" height="48" draggable="false"/></div>
+								<div class="text-div"><span>楼梯</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/louti2.png" width="203" height="141" draggable="false"/></div>
+								<div class="text-div"><span>楼梯</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/dianti.png" width="80" height="90" draggable="false"/></div>
+								<div class="text-div"><span>电梯</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/jiagou/yangtai.png" width="87" height="63" draggable="false"/></div>
+								<div class="text-div"><span>阳台</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/shuchuang.png" width="17" height="89" draggable="false"/></div>
+								<div class="text-div"><span>窗户(竖)</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/hengchuang.png" width="89" height="17" draggable="false"/></div>
+								<div class="text-div"><span>窗户(横)</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/mengchuang.png" width="140" height="26" draggable="false"/></div>
+								<div class="text-div"><span>门式窗</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/base/huachuang.png" width="163" height="23" draggable="false"/></div>
+								<div class="text-div"><span>滑窗</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/dianqi/kongtiao.png" width="124" height="64" draggable="false"/></div>
+								<div class="text-div"><span>空调位</span></div>
+							</div>
+						</div>
+					</div>		
+					<div class="bankuai">
+						<h2>家电</h2>
+						<div class="model">
+							
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/dianqi/tv1.png" width="42" height="114" draggable="false"/></div>
+								<div class="text-div"><span>电视</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/dianqi/tv2.png" width="27" height="119" draggable="false"/></div>
+								<div class="text-div"><span>电视</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/dianqi/xiyiji.png" width="244" height="177" draggable="false"/></div>
+								<div class="text-div"><span>洗衣机</span></div>
+							</div>
+							
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/binggui.png" width="67" height="99" draggable="false"/></div>
+								<div class="text-div"><span>冰箱</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/chuangtougui.png" width="77" height="76" draggable="false"/></div>
+								<div class="text-div"><span>台灯</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/chaji1.png" width="72" height="72" draggable="false"/></div>
+								<div class="text-div"><span>台灯</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/luodigeng.png" width="140" height="137" draggable="false"/></div>
+								<div class="text-div"><span>台灯</span></div>
+							</div>
+						</div>
+					</div>
+					<div class="bankuai">
+						<h2>厨房和餐厅</h2>
+						<div class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/shuichi.png" width="85" height="166" draggable="false"/></div>
+								<div class="text-div"><span>水盆1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/shuichi1.png" width="83" height="91" draggable="false"/></div>
+								<div class="text-div"><span>水盆2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/zhuozi.png" width="328" height="225" draggable="false"/></div>
+								<div class="text-div"><span>饭桌1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/zhuozi1.png" width="327" height="256" draggable="false"/></div>
+								<div class="text-div"><span>饭桌2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/zhuozi2.png" width="259" height="255" draggable="false"/></div>
+								<div class="text-div"><span>饭桌3</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/zhuozi3.png" width="260" height="255" draggable="false"/></div>
+								<div class="text-div"><span>饭桌4</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/luzi.png" width="85" height="67" draggable="false"/></div>
+								<div class="text-div"><span>炉灶1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/luzi2.png" width="141" height="67" draggable="false"/></div>
+								<div class="text-div"><span>炉灶1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/luju.png" width="117" height="122" draggable="false"/></div>
+								<div class="text-div"><span>炉灶3</span></div>
+							</div>
+						</div>
+					</div>
+					<div class="bankuai">
+						<h2>卧室</h2>
+						<div class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/penzai.png" width="152" height="152" draggable="false"/></div>
+								<div class="text-div"><span>盆栽1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/penzai2.png" width="116" height="115" draggable="false"/ ></div>
+								<div class="text-div"><span>盆栽2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/chuang.png"  width="132" height="114" draggable="false"/></div>
+								<div class="text-div"><span>床1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/chuang2.png"  width="441" height="276" draggable="false"/></div>
+								<div class="text-div"><span>床2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/chuang1.png"  width="196" height="285" draggable="false"/></div>
+								<div class="text-div"><span>床1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/chuang2.png"  width="235" height="288" draggable="false"/></div>
+								<div class="text-div"><span>床2</span></div>
+							</div>
+							
+						</div>
+					</div>
+					<div class="bankuai">
+						<h2>浴室</h2>
+						<div class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/matong.png" width="106" height="70" draggable="false"/></div>
+								<div class="text-div"><span>马桶</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/shuichi4.png" width="89" height="99" draggable="false"/></div>
+								<div class="text-div"><span>浴盆1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/yugang.png" width="185" height="94" draggable="false"/></div>
+								<div class="text-div"><span>浴缸</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/maojinjia.png" width="22" height="130" draggable="false"/></div>
+								<div class="text-div"><span>毛巾架</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/jiaoluolinyu.png" width="98" height="99" draggable="false"/></div>
+								<div class="text-div"><span>墙角浴室</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/jiaoluolinyu2.png" width="105" height="103" draggable="false"/></div>
+								<div class="text-div"><span>角落淋浴</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/jiaoluolinyu3.png" width="100" height="99" draggable="false"/></div>
+								<div class="text-div"><span>浴室</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/zuoyupen.png" width="83" height="63" draggable="false"/></div>
+								<div class="text-div"><span>坐浴盆</span></div>
+							</div>
+						</div>
+					</div>
+					<div class="bankuai">
+						<h2>沙发和椅子</h2>
+						<div class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/shafa.png" width="155" height="147" draggable="false"/></div>
+								<div class="text-div"><span>沙发1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/shafa2.png" width="265" height="147" draggable="false"/></div>
+								<div class="text-div"><span>沙发2</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/shafa3.png" width="376" height="147" draggable="false"/></div>
+								<div class="text-div"><span>沙发3</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/yizi.png" width="129" height="129" draggable="false"/></div>
+								<div class="text-div"><span>椅子</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/yizi1.png" width="129" height="129" draggable="false"/></div>
+								<div class="text-div"><span>圆凳</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/fanting/chaji.png" width="166" height="96" draggable="false"/></div>
+								<div class="text-div"><span>茶几</span></div>
+							</div>
+						</div>
+					</div>
+					<div class="bankuai">
+						<h2>柜子</h2>
+						<div class="model">
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/yigui.png" width="295" height="84" draggable="false"/></div>
+								<div class="text-div"><span>衣柜</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/fangzhuo.png" width="314" height="133" draggable="false"/></div>
+								<div class="text-div"><span>柜子</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/woshi/shugui.png" width="64" height="402" draggable="false"/></div>
+								<div class="text-div"><span>书柜</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/chugui1.png" width="83" height="64" draggable="false"/></div>
+								<div class="text-div"><span>橱柜1</span></div>
+							</div>
+							<div class="img" draggable="true" ondragstart="drag(event)">
+								<div class="img-div"><img src="style/chuwei/chugui2.png" width="163" height="63" draggable="false"/></div>
+								<div class="text-div"><span>橱柜2</span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+					
+				<div style="display: none;" id="jiaju" class="jia">
+					<div class="img" onclick="shili(this)" txt='{"qiangarray":[{"QBorder":0,"QX1":98.5,"QX2":98.5,"QY1":64,"QY2":495,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":95.5,"QX2":703.5,"QY1":495,"QY2":496,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":537.5,"QX2":703.5,"QY1":198,"QY2":198,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":699.5,"QX2":699.5,"QY1":197,"QY2":496,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":353.5,"QX2":353.5,"QY1":336,"QY2":495,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":349.5,"QX2":490.5,"QY1":336,"QY2":336,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":486.5,"QX2":486.5,"QY1":336,"QY2":495,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":481.5,"QX2":702.5,"QY1":336,"QY2":336,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":542.5,"QX2":542.5,"QY1":196,"QY2":336,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":311.5,"QX2":311.5,"QY1":127,"QY2":259,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":307.5,"QX2":544.5,"QY1":259,"QY2":259,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":192.5,"QX2":626.5,"QY1":127,"QY2":127,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":622.5,"QX2":621.5,"QY1":127,"QY2":201,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":413.5,"QX2":413.5,"QY1":128,"QY2":261,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":387.5,"QX2":387.5,"QY1":124,"QY2":80,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":388.5,"QX2":312.5,"QY1":84,"QY2":23,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":315.5,"QX2":189.5,"QY1":23,"QY2":23,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":191.5,"QX2":98.5,"QY1":67,"QY2":67,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":191.5,"QX2":191.5,"QY1":20,"QY2":69,"QW":8,"QColor":"#666"},]}&&{"imgarray":[{"imgX":117.9488226952435,"imgY":59.599999999999994,"imgR":0,"imgBorder":0,"imgScaleX":0.6260661938490942,"imgScaleY":0.5205192896706646,"imgSrc":"style/base/meng4.png"},{"imgX":353.1,"imgY":217.6,"imgR":0,"imgBorder":0,"imgScaleX":0.5139784946236559,"imgScaleY":0.473267326732673,"imgSrc":"style/base/meng.png"},{"imgX":426.1,"imgY":216.6,"imgR":0,"imgBorder":0,"imgScaleX":0.5032258064516131,"imgScaleY":0.4633663366336631,"imgSrc":"style/base/meng.png"},{"imgX":424.6,"imgY":330.6,"imgR":0,"imgBorder":0,"imgScaleX":0.46666666666666623,"imgScaleY":0.46855600539811,"imgSrc":"style/base/meng4.png"},{"imgX":497.6,"imgY":331.6,"imgR":0,"imgBorder":0,"imgScaleX":0.4458333333333329,"imgScaleY":0.4476383265856945,"imgSrc":"style/base/meng4.png"},{"imgX":232.8,"imgY":13.599999999999994,"imgR":90,"imgBorder":0,"imgScaleX":0.3341176470588232,"imgScaleY":0.34216867469879486,"imgSrc":"style/chuwei/shuichi.png"},{"imgX":306.1,"imgY":44.099999999999994,"imgR":40.50691863446707,"imgBorder":0,"imgScaleX":0.5638554216867467,"imgScaleY":0.5543346774193547,"imgSrc":"style/chuwei/chugui1.png"},{"imgX":244.1,"imgY":98.69999999999999,"imgR":180,"imgBorder":0,"imgScaleX":0.3602836879432621,"imgScaleY":0.3546461242176213,"imgSrc":"style/chuwei/luzi2.png"},{"imgX":208.1,"imgY":179.4,"imgR":0,"imgBorder":0,"imgScaleX":0.2654434250764526,"imgScaleY":0.26249999999999996,"imgSrc":"style/fanting/zhuozi1.png"},{"imgX":109.1,"imgY":269.8,"imgR":0,"imgBorder":0,"imgScaleX":0.09490445859872614,"imgScaleY":0.38210257787325463,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":79.1,"imgY":393.2,"imgR":270,"imgBorder":0,"imgScaleX":0.2627659574468084,"imgScaleY":0.26017116524028966,"imgSrc":"style/fanting/shafa3.png"},{"imgX":109.1,"imgY":323.6,"imgR":0,"imgBorder":0,"imgScaleX":0.21578947368421025,"imgScaleY":0.21578947368421025,"imgSrc":"style/woshi/penzai.png"},{"imgX":337.1,"imgY":341.8,"imgR":0,"imgBorder":0,"imgScaleX":0.040764331210191095,"imgScaleY":1.0406015037593987,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":334.7,"imgY":380.6,"imgR":0,"imgBorder":0,"imgScaleX":0.5037037037037037,"imgScaleY":0.5061224489795917,"imgSrc":"style/dianqi/tv2.png"},{"imgX":536.1,"imgY":148.60000000000002,"imgR":180,"imgBorder":0,"imgScaleX":0.2775193798449608,"imgScaleY":0.2775193798449608,"imgSrc":"style/fanting/yizi.png"},{"imgX":459.2,"imgY":93.6,"imgR":270,"imgBorder":0,"imgScaleX":0.21250000000000002,"imgScaleY":0.23305693753454956,"imgSrc":"style/woshi/shugui.png"},{"imgX":500.1,"imgY":213.6,"imgR":0,"imgBorder":0,"imgScaleX":0.24210526315789488,"imgScaleY":0.24210526315789488,"imgSrc":"style/woshi/penzai.png"},{"imgX":316.1,"imgY":147,"imgR":0,"imgBorder":0,"imgScaleX":0.4821052631578944,"imgScaleY":0.4616935483870969,"imgSrc":"style/chuwei/matong.png"},{"imgX":316,"imgY":196.6,"imgR":0,"imgBorder":0,"imgScaleX":0.337078651685393,"imgScaleY":0.3415977961432504,"imgSrc":"style/chuwei/shuichi4.png"},{"imgX":634.1,"imgY":207.3,"imgR":0,"imgBorder":0,"imgScaleX":0.45517241379310364,"imgScaleY":0.45172510518934067,"imgSrc":"style/woshi/penzai2.png"},{"imgX":632.1,"imgY":273.3,"imgR":0,"imgBorder":0,"imgScaleX":0.46379310344827596,"imgScaleY":0.4602805049088358,"imgSrc":"style/woshi/penzai2.png"},{"imgX":559.1,"imgY":215,"imgR":0,"imgBorder":0,"imgScaleX":0.23384615384615393,"imgScaleY":0.2307400379506644,"imgSrc":"style/fanting/zhuozi3.png"},{"imgX":359.1,"imgY":339.9,"imgR":0,"imgBorder":0,"imgScaleX":0.40368098159509197,"imgScaleY":0.38745519713261634,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":372.1,"imgY":391.6,"imgR":270,"imgBorder":0,"imgScaleX":0.3,"imgScaleY":0.3045614035087719,"imgSrc":"style/fanting/chuang1.png"},{"imgX":505.5,"imgY":399.6,"imgR":-90,"imgBorder":0,"imgScaleX":0.2978723404255319,"imgScaleY":0.3013888888888889,"imgSrc":"style/fanting/chuang2.png"},{"imgX":636.1,"imgY":367.9,"imgR":-270,"imgBorder":0,"imgScaleX":0.5325153374233129,"imgScaleY":0.5111111111111111,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":489.821743217837,"imgY":484.3,"imgR":0,"imgBorder":0,"imgScaleX":2.195017006340742,"imgScaleY":0.9058823529411765,"imgSrc":"style/base/hengchuang.png"},{"imgX":676.8,"imgY":429.6,"imgR":0,"imgBorder":0,"imgScaleX":1.141176470588235,"imgScaleY":0.7918367346938769,"imgSrc":"style/base/shuchuang.png"},{"imgX":380.1,"imgY":487.3,"imgR":0,"imgBorder":0,"imgScaleX":0.6244604316546762,"imgScaleY":0.616,"imgSrc":"style/base/mengchuang.png"},{"imgX":156.1,"imgY":487.3,"imgR":0,"imgBorder":0,"imgScaleX":0.8402877697841726,"imgScaleY":0.616,"imgSrc":"style/base/mengchuang.png"},{"imgX":166.88953673045705,"imgY":90.4,"imgR":-90,"imgBorder":0,"imgScaleX":0.3387786904238402,"imgScaleY":0.4060678658552715,"imgSrc":"style/base/huachuang.png"},{"imgX":509.6,"imgY":291.78264624313726,"imgR":90,"imgBorder":0,"imgScaleX":0.39141104294478524,"imgScaleY":0.46129750519720064,"imgSrc":"style/base/huachuang.png"},]}&&{"textarray":[{"textX":174.5,"textY":398.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"客厅"},{"textX":412.5,"textY":400.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":600.5,"textY":400.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"主卧"},{"textX":336.5,"textY":192.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"洗手间"},{"textX":244.5,"textY":72.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"厨房"},{"textX":448.5,"textY":173.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"书房"},]}'>
+						<div class="img-div"><img src="style/shili/tu1.png" width="825" height="519" draggable="false"/></div>
+						<div class="text-div"><span>示例1</span></div>
+					</div>
+					<div class="img" onclick="shili(this)" txt='{"qiangarray":[{"QBorder":0,"QX1":79,"QX2":79,"QY1":277,"QY2":484,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":75,"QX2":787,"QY1":481,"QY2":481,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":783,"QX2":783,"QY1":86,"QY2":481,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":77,"QX2":310,"QY1":281,"QY2":281,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":307,"QX2":307,"QY1":277,"QY2":482,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":479,"QX2":479,"QY1":270,"QY2":484,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":475,"QX2":786,"QY1":272,"QY2":271,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":15,"QX2":15,"QY1":105,"QY2":280,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":11,"QX2":241,"QY1":280,"QY2":280,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":11,"QX2":241,"QY1":105,"QY2":105,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":237,"QX2":237,"QY1":105,"QY2":280,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":237,"QX2":237,"QY1":9,"QY2":123,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":233,"QX2":478,"QY1":10,"QY2":9,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":474,"QX2":474,"QY1":9,"QY2":123,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":474,"QX2":474,"QY1":42,"QY2":187,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":470,"QX2":787,"QY1":187,"QY2":187,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":470,"QX2":787,"QY1":42,"QY2":42,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":783,"QX2":783,"QY1":42,"QY2":187,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":629,"QX2":629,"QY1":42,"QY2":189,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":235,"QX2":235,"QY1":9,"QY2":125,"QW":4,"QColor":"#666"},{"QBorder":0,"QX1":233,"QX2":391,"QY1":125,"QY2":125,"QW":4,"QColor":"#666"},{"QBorder":0,"QX1":233,"QX2":391,"QY1":9,"QY2":9,"QW":4,"QColor":"#666"},{"QBorder":0,"QX1":389,"QX2":389,"QY1":9,"QY2":125,"QW":4,"QColor":"#666"},{"QBorder":0,"QX1":613,"QX2":614,"QY1":274,"QY2":483,"QW":8,"QColor":"#666"},]}&&{"imgarray":[{"imgX":402.9795774429519,"imgY":4.600000000000001,"imgR":0,"imgBorder":0,"imgScaleX":0.5837588032718372,"imgScaleY":0.5208502024291493,"imgSrc":"style/base/meng4.png"},{"imgX":516.6,"imgY":35.3,"imgR":0,"imgBorder":0,"imgScaleX":0.8292134831460671,"imgScaleY":0.8074168797953963,"imgSrc":"style/base/hengchuang.png"},{"imgX":663.6,"imgY":35.3,"imgR":0,"imgBorder":0,"imgScaleX":0.6244604316546762,"imgScaleY":0.616,"imgSrc":"style/base/mengchuang.png"},{"imgX":285.6,"imgY":363.32903225806496,"imgR":269.93165235264223,"imgBorder":0,"imgScaleX":0.24946808510638266,"imgScaleY":0.24700460829493118,"imgSrc":"style/fanting/shafa3.png"},{"imgX":453.6,"imgY":307.8,"imgR":0,"imgBorder":0,"imgScaleX":0.05350318471337582,"imgScaleY":1.122521937091512,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":366.6,"imgY":368.5,"imgR":90,"imgBorder":0,"imgScaleX":0.20493827160493838,"imgScaleY":0.2037166900420757,"imgSrc":"style/fanting/chaji.png"},{"imgX":245.1,"imgY":271.6,"imgR":0,"imgBorder":0,"imgScaleX":0.5708333333333334,"imgScaleY":0.5103913630229414,"imgSrc":"style/base/meng4.png"},{"imgX":497.1,"imgY":263.6,"imgR":0,"imgBorder":0,"imgScaleX":0.58125,"imgScaleY":0.47901484480431816,"imgSrc":"style/base/meng4.png"},{"imgX":626.1,"imgY":264.6,"imgR":0,"imgBorder":0,"imgScaleX":0.5604166666666669,"imgScaleY":0.49993252361673396,"imgSrc":"style/base/meng4.png"},{"imgX":257.6,"imgY":40.300000000000004,"imgR":0,"imgBorder":0,"imgScaleX":0.43793103448275894,"imgScaleY":0.43461430575035065,"imgSrc":"style/woshi/penzai2.png"},{"imgX":318.6,"imgY":41.30000000000001,"imgR":0,"imgBorder":0,"imgScaleX":0.4551724137931036,"imgScaleY":0.45172510518934084,"imgSrc":"style/woshi/penzai2.png"},{"imgX":299.6,"imgY":191.6,"imgR":0,"imgBorder":0,"imgScaleX":0.26463414634146337,"imgScaleY":0.2613333333333333,"imgSrc":"style/fanting/zhuozi.png"},{"imgX":187.6,"imgY":133.6,"imgR":270,"imgBorder":0,"imgScaleX":0.5892473118279571,"imgScaleY":0.5425742574257423,"imgSrc":"style/base/meng.png"},{"imgX":239.6,"imgY":222.6,"imgR":0,"imgBorder":0,"imgScaleX":0.24210526315789457,"imgScaleY":0.24210526315789457,"imgSrc":"style/woshi/penzai.png"},{"imgX":155.6,"imgY":234.2,"imgR":180,"imgBorder":0,"imgScaleX":0.4030534351145036,"imgScaleY":0.40291363163371474,"imgSrc":"style/dianqi/xiyiji.png"},{"imgX":26.6,"imgY":234,"imgR":0,"imgBorder":0,"imgScaleX":0.3768421052631576,"imgScaleY":0.3608870967741934,"imgSrc":"style/chuwei/matong.png"},{"imgX":28.6,"imgY":120.30000000000001,"imgR":0,"imgBorder":0,"imgScaleX":0.4043243243243243,"imgScaleY":0.39787234042553177,"imgSrc":"style/chuwei/yugang.png"},{"imgX":125.5,"imgY":109.58181818181808,"imgR":-270,"imgBorder":0,"imgScaleX":0.3370786516853925,"imgScaleY":0.34159779614325025,"imgSrc":"style/chuwei/shuichi4.png"},{"imgX":85.6,"imgY":386.4,"imgR":0,"imgBorder":0,"imgScaleX":0.48971962616822423,"imgScaleY":0.4688485990110666,"imgSrc":"style/woshi/chuang2.png"},{"imgX":118.6,"imgY":284.9,"imgR":0,"imgBorder":0,"imgScaleX":0.5325153374233129,"imgScaleY":0.5111111111111111,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":261.6,"imgY":429.1,"imgR":-270,"imgBorder":0,"imgScaleX":0.5518072289156627,"imgScaleY":0.5424899193548387,"imgSrc":"style/chuwei/chugui1.png"},{"imgX":586.6,"imgY":93.7,"imgR":90,"imgBorder":0,"imgScaleX":0.3673758865248224,"imgScaleY":0.36162734713529104,"imgSrc":"style/chuwei/luzi2.png"},{"imgX":511.6,"imgY":154.58674351585006,"imgR":0,"imgBorder":0,"imgScaleX":0.3496815286624205,"imgScaleY":0.21650235097831036,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":515.3,"imgY":36.6,"imgR":90,"imgBorder":0,"imgScaleX":0.32235294117647045,"imgScaleY":0.3301204819277108,"imgSrc":"style/chuwei/shuichi.png"},{"imgX":564.6,"imgY":277.1,"imgR":0,"imgBorder":0,"imgScaleX":0.5036144578313251,"imgScaleY":0.4951108870967741,"imgSrc":"style/chuwei/chugui1.png"},{"imgX":484.6,"imgY":409.4,"imgR":0,"imgBorder":0,"imgScaleX":0.4850467289719624,"imgScaleY":0.46437485283729674,"imgSrc":"style/woshi/chuang2.png"},{"imgX":485.6,"imgY":350.6,"imgR":0,"imgBorder":0,"imgScaleX":0.23100775193798423,"imgScaleY":0.23100775193798423,"imgSrc":"style/fanting/yizi.png"},{"imgX":620.6,"imgY":384.222580645161,"imgR":0,"imgBorder":0,"imgScaleX":0.4826291079812206,"imgScaleY":0.4674330816746739,"imgSrc":"style/woshi/chuang.png"},{"imgX":748.6,"imgY":345.73566176470547,"imgR":0,"imgBorder":0,"imgScaleX":0.05031847133757971,"imgScaleY":0.6501078062804071,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":691.6,"imgY":275.9,"imgR":0,"imgBorder":0,"imgScaleX":0.5325153374233129,"imgScaleY":0.5111111111111111,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":697.6,"imgY":57.400000000000006,"imgR":0,"imgBorder":0,"imgScaleX":0.23741935483870938,"imgScaleY":0.23418915953478162,"imgSrc":"style/fanting/shafa.png"},{"imgX":763.7,"imgY":68.6,"imgR":0,"imgBorder":0,"imgScaleX":0.22812499999999997,"imgScaleY":0.25019347705914874,"imgSrc":"style/woshi/shugui.png"},{"imgX":686.6,"imgY":101.8,"imgR":0,"imgBorder":0,"imgScaleX":0.19363057324840766,"imgScaleY":0.17909289352413288,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":636.6,"imgY":119.4,"imgR":-90,"imgBorder":0,"imgScaleX":0.2438709677419344,"imgScaleY":0.24055299539170433,"imgSrc":"style/fanting/shafa.png"},{"imgX":633.6,"imgY":48.30000000000001,"imgR":0,"imgBorder":0,"imgScaleX":0.33448275862068994,"imgScaleY":0.3319495091164096,"imgSrc":"style/woshi/penzai2.png"},{"imgX":430.6,"imgY":129.4,"imgR":90,"imgBorder":0,"imgScaleX":0.5325153374233129,"imgScaleY":0.4869565217391304,"imgSrc":"style/base/huachuang.png"},{"imgX":661.6,"imgY":179.4,"imgR":0,"imgBorder":0,"imgScaleX":0.5325153374233129,"imgScaleY":0.4869565217391304,"imgSrc":"style/base/huachuang.png"},]}&&{"textarray":[{"textX":167.5,"textY":357.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":544.5,"textY":358.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":677.5,"textY":346.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":387.5,"textY":321.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"客厅"},{"textX":531.5,"textY":106.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"厨房"},{"textX":116.5,"textY":209.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"洗手间"},{"textX":694.5,"textY":149.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"书房"},]}'>
+						<div class="img-div"><img src="style/shili/tu2.png" width="825" height="519" draggable="false"/></div>
+						<div class="text-div"><span>示例2</span></div>
+					</div>
+					<div class="img" onclick="shili(this)" txt='{"qiangarray":[{"QBorder":0,"QX1":46.5,"QX2":46.5,"QY1":36,"QY2":308,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":42.5,"QX2":792.5,"QY1":306,"QY2":306,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":42.5,"QX2":792.5,"QY1":36,"QY2":36,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":788.5,"QX2":788.5,"QY1":36,"QY2":308,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":108.5,"QX2":108.5,"QY1":308,"QY2":498,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":104.5,"QX2":792.5,"QY1":496,"QY2":497,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":788.5,"QX2":788.5,"QY1":307,"QY2":497,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":210.5,"QX2":210.5,"QY1":36,"QY2":306,"QW":4,"QColor":"#666"},{"QBorder":0,"QX1":485.5,"QX2":485.5,"QY1":36,"QY2":219,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":481.5,"QX2":791.5,"QY1":219,"QY2":219,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":628.5,"QX2":629.5,"QY1":219,"QY2":310,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":525.5,"QX2":526.5,"QY1":306,"QY2":498,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":289.5,"QX2":289.5,"QY1":308,"QY2":495,"QW":8,"QColor":"#666"},{"QBorder":0,"QX1":109.5,"QX2":203.5,"QY1":409,"QY2":409,"QW":4,"QColor":"#666"},]}&&{"imgarray":[{"imgX":167.5,"imgY":149.1,"imgR":90,"imgBorder":0,"imgScaleX":0.5398773006134967,"imgScaleY":0.5356521739130435,"imgSrc":"style/base/huachuang.png"},{"imgX":24.5,"imgY":71.7,"imgR":270,"imgBorder":0,"imgScaleX":0.576687116564417,"imgScaleY":0.566984126984127,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":52,"imgY":146,"imgR":0,"imgBorder":0,"imgScaleX":0.35294117647058815,"imgScaleY":0.36144578313253023,"imgSrc":"style/chuwei/shuichi.png"},{"imgX":51.6,"imgY":222.84225176783434,"imgR":0,"imgBorder":0,"imgScaleX":0.4940170940170942,"imgScaleY":0.5236497460869131,"imgSrc":"style/chuwei/luju.png"},{"imgX":122.5,"imgY":44.7,"imgR":0,"imgBorder":0,"imgScaleX":0.42944785276073616,"imgScaleY":0.42222222222222217,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":158.5,"imgY":233.3,"imgR":0,"imgBorder":0,"imgScaleX":0.15923566878980888,"imgScaleY":0.4766917293233084,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":210.5,"imgY":218.16000000000014,"imgR":90,"imgBorder":0,"imgScaleX":0.29878048780487787,"imgScaleY":0.296177777777778,"imgSrc":"style/fanting/zhuozi.png"},{"imgX":113.5,"imgY":311,"imgR":0,"imgBorder":0,"imgScaleX":0.2828947368421053,"imgScaleY":0.2828947368421053,"imgSrc":"style/woshi/penzai.png"},{"imgX":115.7,"imgY":366.36363636363626,"imgR":0,"imgBorder":0,"imgScaleX":0.3101123595505615,"imgScaleY":0.3168044077134984,"imgSrc":"style/chuwei/shuichi4.png"},{"imgX":254.5,"imgY":353.1,"imgR":90,"imgBorder":0,"imgScaleX":0.42944785276073616,"imgScaleY":0.4260869565217391,"imgSrc":"style/base/huachuang.png"},{"imgX":348.5,"imgY":314.7,"imgR":0,"imgBorder":0,"imgScaleX":0.42944785276073616,"imgScaleY":0.42222222222222217,"imgSrc":"style/chuwei/chugui2.png"},{"imgX":430.5,"imgY":400.75,"imgR":90,"imgBorder":0,"imgScaleX":0.3446808510638298,"imgScaleY":0.35156249999999967,"imgSrc":"style/fanting/chuang2.png"},{"imgX":458.9422874512667,"imgY":299,"imgR":0,"imgBorder":0,"imgScaleX":0.5532856780986118,"imgScaleY":0.5027146620234316,"imgSrc":"style/base/meng4.png"},{"imgX":538.3,"imgY":300,"imgR":0,"imgBorder":0,"imgScaleX":0.5354166666666662,"imgScaleY":0.49540133779264134,"imgSrc":"style/base/meng4.png"},{"imgX":621.3,"imgY":237.91304347826076,"imgR":270,"imgBorder":0,"imgScaleX":0.5249999999999999,"imgScaleY":0.44314381270902975,"imgSrc":"style/base/meng4.png"},{"imgX":540.5,"imgY":176,"imgR":0,"imgBorder":0,"imgScaleX":0.5161290322580646,"imgScaleY":0.475247524752475,"imgSrc":"style/base/meng.png"},{"imgX":237.95344217118128,"imgY":28,"imgR":0,"imgBorder":0,"imgScaleX":0.6572199547670575,"imgScaleY":0.5894648829431437,"imgSrc":"style/base/meng4.png"},{"imgX":532.690677233265,"imgY":381.7874775655175,"imgR":180,"imgBorder":0,"imgScaleX":0.494041336460474,"imgScaleY":0.26847464713623986,"imgSrc":"style/woshi/shugui.png"},{"imgX":609.5,"imgY":436.3,"imgR":0,"imgBorder":0,"imgScaleX":0.2738853503184713,"imgScaleY":0.2715789473684209,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":258.5,"imgY":428.3599999999999,"imgR":90,"imgBorder":0,"imgScaleX":0.24810126582278477,"imgScaleY":0.3266666666666666,"imgSrc":"style/woshi/yigui.png"},{"imgX":630.5,"imgY":384.35999999999996,"imgR":0,"imgBorder":0,"imgScaleX":0.2645161290322582,"imgScaleY":0.26217687074829926,"imgSrc":"style/fanting/shafa.png"},{"imgX":743.5,"imgY":314.7,"imgR":0,"imgBorder":0,"imgScaleX":0.3103448275862065,"imgScaleY":0.3067826086956519,"imgSrc":"style/woshi/penzai2.png"},{"imgX":729.5,"imgY":244.5,"imgR":90,"imgBorder":0,"imgScaleX":0.3675675675675676,"imgScaleY":0.3617021276595745,"imgSrc":"style/chuwei/yugang.png"},{"imgX":704.5,"imgY":231.31999999999988,"imgR":90,"imgBorder":0,"imgScaleX":0.34736842105263177,"imgScaleY":0.34031250000000035,"imgSrc":"style/chuwei/matong.png"},{"imgX":671.7,"imgY":222.31818181818164,"imgR":90,"imgBorder":0,"imgScaleX":0.2539325842696629,"imgScaleY":0.2594123048668503,"imgSrc":"style/chuwei/shuichi4.png"},{"imgX":582.5,"imgY":46,"imgR":0,"imgBorder":0,"imgScaleX":0.3531914893617021,"imgScaleY":0.3602430555555555,"imgSrc":"style/fanting/chuang2.png"},{"imgX":309.5,"imgY":133.7999999999999,"imgR":-90,"imgBorder":0,"imgScaleX":0.23670212765957468,"imgScaleY":0.23006802721088457,"imgSrc":"style/fanting/shafa3.png"},{"imgX":464.18243345913106,"imgY":90.30000000000001,"imgR":0,"imgBorder":0,"imgScaleX":0.052978130833560656,"imgScaleY":0.8995013519564463,"imgSrc":"style/woshi/fangzhuo.png"},{"imgX":467.8,"imgY":120,"imgR":0,"imgBorder":0,"imgScaleX":0.4962962962962962,"imgScaleY":0.5118411000763942,"imgSrc":"style/dianqi/tv2.png"},{"imgX":376.5,"imgY":194.23999999999992,"imgR":180,"imgBorder":0,"imgScaleX":0.25161290322580626,"imgScaleY":0.24938775510204075,"imgSrc":"style/fanting/shafa.png"},{"imgX":342.5,"imgY":197.7,"imgR":0,"imgBorder":0,"imgScaleX":0.37662337662337664,"imgScaleY":0.37394736842105275,"imgSrc":"style/woshi/chuangtougui.png"},{"imgX":382.5,"imgY":67.98000000000002,"imgR":0,"imgBorder":0,"imgScaleX":0.29310344827586166,"imgScaleY":0.2897391304347823,"imgSrc":"style/woshi/penzai2.png"},{"imgX":717.5,"imgY":142.95999999999998,"imgR":-90,"imgBorder":0,"imgScaleX":0.26075949367088597,"imgScaleY":0.3433333333333332,"imgSrc":"style/woshi/yigui.png"},{"imgX":493.5,"imgY":59,"imgR":0,"imgBorder":0,"imgScaleX":0.27906976744186024,"imgScaleY":0.27906976744186024,"imgSrc":"style/fanting/yizi.png"},{"imgX":738.5,"imgY":41.7,"imgR":0,"imgBorder":0,"imgScaleX":0.336206896551724,"imgScaleY":0.33234782608695634,"imgSrc":"style/woshi/penzai2.png"},{"imgX":669.5,"imgY":50,"imgR":0,"imgBorder":0,"imgScaleX":0.40277777777777757,"imgScaleY":0.40277777777777757,"imgSrc":"style/fanting/chaji1.png"},{"imgX":111.5,"imgY":418.8799999999999,"imgR":0,"imgBorder":0,"imgScaleX":0.7047619047619045,"imgScaleY":0.7040776699029125,"imgSrc":"style/chuwei/jiaoluolinyu2.png"},]}&&{"textarray":[{"textX":112.5,"textY":162.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"厨房"},{"textX":392.5,"textY":142.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"客厅"},{"textX":633.5,"textY":177.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":371.5,"textY":393.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"卧室"},{"textX":702.5,"textY":396.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"书房"},{"textX":191.5,"textY":371.5,"textBorder":0,"textSize":16,"textColor":"#000000","textArray":"洗手间"},]}'>
+						<div class="img-div"><img src="style/shili/tu3.png" width="825" height="519" draggable="false"/></div>
+						<div class="text-div"><span>示例3</span></div>
+					</div>
+				</div>
+				</div>
+				<div class="clearfix" style="842px;overflow: hidden;position: relative;">
+					<img src="style/images/biaochi.png" draggable="false" style="margin-bottom: -5px; overflow: hidden;"/>
+					<img src="style/images/biaochi1.png" draggable="false" style="margin:-1px -1px 0;float: left;"/>
+						<canvas id="canvas"  ondrop="drop(event)" ondragover="allowDrop(event)" width="833" height="519">当前浏览器不支持该功能</canvas>
+					<input type="text" id="text" style="display: none;position: absolute;font-size: 15px;padding: 3px 0;text-align: center;border: 1px #000 solid;"/>
+					<input type="text" id="text1" style="display: none;position: absolute;font-size: 15px;padding: 3px 0;text-align: center;border: 1px #000 solid;"/>
+				</div>
+			</div>
+			<div class="help-div">
+				<ul>
+					<li class="title">在线画图六步走：</li>
+					<li>1、画房间：点击上方“框架”按钮，在画板上拉出基本框架，并可选择多余墙壁点击“删除”按钮进行删除。</li>
+					<li>2、画墙：点击上方“画墙”按钮，在画板上拉出所需要墙壁。</li>
+					<li>3、增加门窗：拖出左边的门窗，在右面的画板上生成。</li>
+					<li>4、增加摆件：点击对应标签，拖出需要的摆件。</li>
+					<li>5、填写备注：点击“写字”按钮，填写房间的注释。</li>
+					<li>6、保存：点击“导出图片”可下载图片(IE则需将其右键另存为)；点击“保存”按钮，可下载当前作图的保存文件(仅谷歌内核浏览器)。</li>
+				</ul>
+			</div>
+		</div>
+
+		</div>
+		<div class="blackbg" style="display:none;width: 0px;height: 0px;" id="blackkuan"></div>
+		<div class="blackbg" id="blackbg"></div>
+		<div class="image_png" id="image_png-div">
+			<div style="position: relative;">
+				<span style="">保存图片请右键另存为</span>
+				<img src="style/images/exit.png" width="32" height="32" id="exit" style="position: absolute;right: 0;top: 0;cursor: pointer;"/>
+				<span id="imgUrl">
+					<img src="" width="825" height="519" id="image_png"/>
+				</span>
+			</div>
+		</div>
+		
+		
+		<div class="hint" id="hint">
+		<ul>
+			<li class="title">温馨提示</li>
+			<li>1、右方提供示例，可提供修改</li>
+			<li>2、左右拖拉文字选择框右下点能控制文字大小</li>
+			<li>3、双击文字即可进行修改</li>
+			<li>4、建议控制完图层大小位置再控制图层的旋转角度</li>
+			<li>5、建议将所选图层先置顶，能更好地修改图层</li>
+			<li>6、如若尚未完成作图，可点击"保存"按钮获取保存文件，下次可打开文件继续作图</li>
+		</ul>
+		</div>
+		
+		
+		<script type="text/javascript" src="js/ImgObject.js" ></script>
+		<script type="text/javascript" src="js/WallObject.js" ></script>
+		<script type="text/javascript" src="js/WordObject.js" ></script>
+		<script type="text/javascript" src="js/huxing.js" ></script>
+		<script>
+        $(function () {
+        	$("#qiang-icon").click(function(){
+        		var ge = $(this).hasClass("select");
+        		if(ge){
+        			$(this).removeClass("select");
+        			$("#dian").hide();
+        		}else{
+        			$("#kuanjia-icon").removeClass("select");
+        			$(this).addClass("select");
+        			$("#dian").show();
+        			if(!$(".dian1").hasClass("select")&&!$(".dian2").hasClass("select")&&!$(".dian3").hasClass("select")){
+        				$(".dian1").addClass("select");
+        			}
+        		}
+        		qiang();
+        	});
+        	$(".dian1").click(function(){
+        		$("#dian .select").removeClass("select");
+        		Q_W(4);
+        		$(this).addClass("select");
+        	});
+        	$(".dian2").click(function(){
+        		$("#dian .select").removeClass("select");
+        		Q_W(8);
+        		$(this).addClass("select");
+        	});
+        	$(".dian3").click(function(){
+        		$("#dian .select").removeClass("select");
+        		Q_W(16);
+        		$(this).addClass("select");
+        	});
+        	$("#qi-icon").click(function(){
+        		var ge = $(this).hasClass("select");
+        		if(ge){
+        			$(this).removeClass("select");
+        			$("#duiqi").hide();
+        		}else{
+        			$(this).addClass("select");
+					$("#duiqi").css("top",($("#qi-icon").get(0).offsetTop+40)+"px");
+					$("#duiqi").css("left",($("#qi-icon").get(0).offsetLeft)+"px");
+        			$("#duiqi").show();
+        		}
+        	});
+        	$("#kuanjia-icon").click(function(){
+        		var ge = $(this).hasClass("select");
+        		if(ge){
+        			$(this).removeClass("select");
+        			$("#dian").hide();
+        		}else{
+        			$("#qiang-icon").removeClass("select");
+        			$(this).addClass("select");
+        			$("#dian").show();
+        			if(!$(".dian1").hasClass("select")&&!$(".dian2").hasClass("select")&&!$(".dian3").hasClass("select")){
+        				$(".dian1").addClass("select");
+        			}
+        		}
+        		kuangjia();
+        	});
+        	
+        	$('#color').cxColor();
+        	$('#Qcolor').cxColor({
+        		color:'#666'
+        	});
+//      	$("#ge").attr("checked",'true');//默认选中
+        	$("#exit").click(function(){
+        		$("#image_png-div").hide();
+        		$("#blackbg").hide();
+        	});
+//			$(window).resize(function(){SaveAs5();});
+			$("#help-icon").hover(function(){
+				$("#hint").css("top",($("#help-icon").get(0).offsetTop+40)+"px");
+				$("#hint").css("left",($("#help-icon").get(0).offsetLeft-$("#hint").width())+"px");
+				$("#hint").show();
+			},function(){
+				$("#hint").hide();
+			});
+        	$(".tab span").each(function(i){
+        		$(this).click(function(){
+        			$(".tab span").removeClass("on");
+        			$(this).addClass("on");
+        			if(i==0){
+        				$('#jiagou').show();
+        				$('#jiaju').hide();
+        			}else{
+        				$('#jiaju').show();
+        				$('#jiagou').hide();
+        			}
+        		});
+        	});
+        	$("#jiagou .img-div").each(function(i){
+        		var w = $(this).find("img").get(0).width;
+        		var h = $(this).find("img").get(0).height;
+        		if(w>50||h>50){
+        			if(w>=h){
+        				var scale = w/50;
+        				h = h/scale;
+        				$(this).find("img").get(0).width = 50;
+        				$(this).find("img").get(0).height = h;
+        				var marginT = 35-h/2;
+        				if(marginT>0){
+        					$(this).find("img").css("margin-top",marginT);
+        				}
+        			}else{
+        				var scale = h/50;
+        				w = w/scale;
+        				$(this).find("img").get(0).width = w;
+        				$(this).find("img").get(0).height = 50;
+        			}
+        		}else{
+        			if(w>=h){
+        				h = $(this).find("img").get(0).height;
+        				var marginT = 35-h/2;
+        				if(marginT>0){
+        					$(this).find("img").css("margin-top",marginT);
+        				}
+        			}
+        		}
+        	});
+        	$("#jiaju .img-div").each(function(i){
+        		var w = $(this).find("img").get(0).width;
+        		var h = $(this).find("img").get(0).height;
+				var scale = w/72;
+				h = h/scale;
+				$(this).find("img").get(0).width = 72;
+				$(this).find("img").get(0).height = h;
+				var marginT = 35-h/2;
+				$(this).find("img").css("margin-top",marginT);
+        	});
+        	$("#ge-icon").click(function(){
+        		var ge = $(this).hasClass("on");
+        		if(ge){
+        			$(this).removeClass("on");
+        		}else{
+        			$(this).addClass("on");
+        		}
+        		drawImage2(!ge,1);
+        	});
+        	$("#magnet").click(function(){
+        		var ge = $(this).hasClass("on");
+        		if(ge){
+        			$(this).removeClass("on");
+        		}else{
+        			$(this).addClass("on");
+        		}
+        		ChangeMagnet();
+        	});
+        	$("#color").change(function(){
+        		var color = $(this).get(0).value;
+        		changecolor(color);
+        	});
+        	$("#Qcolor").change(function(){
+        		var color = $(this).get(0).value;
+        		changecolorQ(color);
+        	});
+			$("#font").click(function(){
+    			canvas=document.getElementById('canvas');
+        			canvas.style.cursor="text";
+					Fontset();
+        	});
+        	var bangkuai = $(".bankuai");
+        	bangkuai.each(function(i){
+        		$(this).click(function(){
+					var model = $(this).find(".model");
+					$(".model").hide();
+					model.show();
+        		});
+        	});
+        	var os = getOs();
+        	if(os!="Safari"){
+        		$(".save-icon").addClass("unselect");
+        		$(".save-icon").attr("title","该功能请使用谷歌内核浏览器");
+        		$(".open-icon").addClass("unselect");
+        		$("#file").attr("title","该功能请使用谷歌内核浏览器");
+        	}
+		}); 
+		</script>
+	</body>
+</html>

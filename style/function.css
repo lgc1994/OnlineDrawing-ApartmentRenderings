@@ -1,0 +1,13 @@
+/*********************
+	默认边框
+	支持传参数，@borderwidth，@bordercolor
+*********************/
+/***********圆角边框************/
+/*box-shadow*/
+/*不换行*/
+.cutstr {
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
